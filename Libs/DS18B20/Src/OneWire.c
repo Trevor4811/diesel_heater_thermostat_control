@@ -45,7 +45,7 @@ uint16_t USART_ReceiveData(USART_TypeDef* USARTx)
   assert_param(IS_USART_ALL_PERIPH(USARTx));
 
   /* Receive Data */
-  return (uint16_t)(USARTx->DR & (uint16_t)0x01FF);
+  return (uint16_t)(USARTx->RDR & (uint16_t)0x01FF);
 }
 
 void USART_SendData(USART_TypeDef* USARTx, uint16_t Data)
@@ -55,7 +55,7 @@ void USART_SendData(USART_TypeDef* USARTx, uint16_t Data)
   assert_param(IS_USART_DATA(Data));
 
   /* Transmit Data */
-  USARTx->DR = (Data & (uint16_t)0x01FF);
+  USARTx->TDR = (Data & (uint16_t)0x01FF);
 }
 
 
@@ -99,10 +99,10 @@ void owReadHandler() { //обработчик прерыания USART
   uint8_t index = getUsartIndex();
   /* Проверяем, что мы вызвали прерывание из-за RXNE. */
   if (((OW_USART->CR1 & USART_CR1_RXNEIE) != 0) &&
-      ((OW_USART->SR & UART_FLAG_RXNE) != (uint16_t)RESET)) {
+      ((OW_USART->ISR & UART_FLAG_RXNE) != (uint16_t)RESET)) {
 
     /* Получаем данные из периферии и сбрасываем флаг*/
-		while ((OW_USART->SR & UART_FLAG_RXNE) == (uint16_t)RESET){;}
+		while ((OW_USART->ISR & UART_FLAG_RXNE) == (uint16_t)RESET){;}
     rc_buffer[index] = USART_ReceiveData(OW_USART);              
     recvFlag &= ~(1 << index);//сбрасываем флаг ответ получен после 
   }
