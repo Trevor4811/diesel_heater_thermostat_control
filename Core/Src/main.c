@@ -24,7 +24,8 @@
 /* USER CODE BEGIN Includes */
 
 #include "error_def.hpp"
-#include "OneWire.h"
+#include "bmp180_for_stm32_hal.h"
+
 
 /* USER CODE END Includes */
 
@@ -103,7 +104,7 @@ static ERROR_TYPE_t getErrorState();
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-extern float Temp[MAXDEVICES_ON_THE_BUS];
+//extern float Temp[MAXDEVICES_ON_THE_BUS];
 
 /* USER CODE END 0 */
 
@@ -572,13 +573,22 @@ void StartLedTask(void *argument)
 void startTempRead(void *argument)
 {
   /* USER CODE BEGIN startTempRead */
-	get_ROMid();
+	BMP180_Init(&hi2c1);
+	BMP180_SetOversampling(BMP180_ULTRA);
+  /* Update calibration data. Must be called once before entering main loop. */
+	BMP180_UpdateCalibrationData();
 	/* Infinite loop */
   for (;;)
   {
-	  get_Temperature();
-//	  HAL_UART_Transmit(&huart2, tx_buffer, len, 1000);
-    osDelay(2000);
+	 /* Reads temperature. */
+	  int32_t temperature = BMP180_GetRawTemperature();
+		int32_t pressure = BMP180_GetPressure();
+		int32_t altitude = BMP180_GetAltitude( pressure, ((float)temperature)/10);
+
+		char buffer[100];
+		sprintf(buffer, "Temperature: %d.%d deg C\t\tPressure: %d Pa\t\tAltitude: %d ft\r\n", temperature/10, temperature%10,pressure, altitude);
+		HAL_UART_Transmit(&huart2, buffer, strlen(buffer), 1000);
+    osDelay(1000);
   }
   /* USER CODE END startTempRead */
 }
